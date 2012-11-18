@@ -7,7 +7,7 @@ from twisted.internet import reactor, protocol
 
 from twisted.protocols import basic
 
-#from common import COMMANDS, display_message, validate_file_md5_hash, get_file_md5_hash, read_bytes_from_file, clean_and_split_input
+from common import display_message #, validate_file_md5_hash, get_file_md5_hash, read_bytes_from_file, clean_and_split_input
 
 class WavReceiveProtocol(basic.LineReceiver):
     delimiter = '\n'
