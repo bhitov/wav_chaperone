@@ -7,6 +7,7 @@ __author__ = 'ben'
 from twisted.internet import reactor, protocol
 
 from twisted.protocols import basic
+from twisted.protocols.policies import TimeoutMixin
 import wave
 
 from common import display_message #, validate_file_md5_hash, get_file_md5_hash, read_bytes_from_file, clean_and_split_input
@@ -14,7 +15,7 @@ def dt2unix():
     dt = datetime.datetime.now()
     return str(time.mktime(dt.timetuple()) + (dt.microsecond / 100 ** 6))
 
-class WavReceiveProtocol(basic.LineReceiver):
+class WavReceiveProtocol(basic.LineReceiver, TimeoutMixin):
     delimiter = '\n'
 
     def connectionMade(self):
@@ -22,6 +23,7 @@ class WavReceiveProtocol(basic.LineReceiver):
         self.file_handler = None
         self.file_data = ()
         self.file_contents = ''
+        self.setTimeout(10)
 
         display_message('Connection from: %s (%d clients total)' % (self.transport.getPeer().host, len(self.factory.clients)))
 
@@ -43,18 +45,11 @@ class WavReceiveProtocol(basic.LineReceiver):
 
         self.file_contents = ''
 
-
-#public class RecorderActivity extends Activity {
-#    private static final int RECORDER_BPP = 16;
-#private static final String AUDIO_RECORDER_FILE_EXT_WAV = ".wav";
-#private static final String AUDIO_RECORDER_FOLDER = "AudioRecorder";
-#private static final String AUDIO_RECORDER_TEMP_FILE = "record_temp.raw";
-#private static final int RECORDER_SAMPLERATE = 44100;
-#private static final int RECORDER_CHANNELS = 2;
-#private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
-#        #
-
         display_message('Connection from %s lost (%d clients left)' % (self.transport.getPeer().host, len(self.factory.clients)))
+
+    def timeoutConnection(self):
+        display_message("Connection timeout")
+        self.transport.loseConnection()
 
     def lineReceived(self, line):
         display_message('Received the following line from the client [%s]: %s' % (self.transport.getPeer().host, line))
@@ -62,6 +57,7 @@ class WavReceiveProtocol(basic.LineReceiver):
         self.setRawMode()
 
     def rawDataReceived(self, data):
+        self.resetTimeout()
         #self.file_contents += data
         #filename = self.file_data[0]
         #file_path = os.path.join(self.factory.files_path, filename)
