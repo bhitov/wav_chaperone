@@ -9,11 +9,16 @@ from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from twisted.protocols.policies import TimeoutMixin
 import wave
+from subprocess import call
 
 from common import display_message #, validate_file_md5_hash, get_file_md5_hash, read_bytes_from_file, clean_and_split_input
 def dt2unix():
     dt = datetime.datetime.now()
     return str(time.mktime(dt.timetuple()) + (dt.microsecond / 100 ** 6))
+
+
+def upload_to_django(filename):
+    call("curl -o %s 'http://localhost/list/'" % filename, shell=True)
 
 class WavReceiveProtocol(basic.LineReceiver, TimeoutMixin):
     delimiter = '\n'
@@ -35,13 +40,17 @@ class WavReceiveProtocol(basic.LineReceiver, TimeoutMixin):
         #self.file_handler = None
         self.file_data = ()
 
-        f = wave.open('stuff/m_%s.wav' % dt2unix(), 'wb')
+        filename = 'stuff/m_%s.wav' % dt2unix()
+        f = wave.open('filename', 'wb')
         f.setnchannels(2)
         f.setsampwidth(2)
         f.setframerate(44100)
 
         f.writeframes(self.file_contents)
         f.close()
+
+        reactor.callInThread(upload_to_django, filename)
+
 
         self.file_contents = ''
 
