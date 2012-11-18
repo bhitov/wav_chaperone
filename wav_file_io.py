@@ -35,7 +35,7 @@ class WavReceiveProtocol(basic.LineReceiver):
 
         f = wave.open('stuff/m_%s.wav' % dt2unix(), 'wb')
         f.setnchannels(2)
-        f.setsampwidth(16)
+        f.setsampwidth(2)
         f.setframerate(44100)
 
         f.writeframes(self.file_contents)
